@@ -1,0 +1,64 @@
+-------------------------Figure 6.11: DSL code for the adaptable activity inference.-----------------------------------------------------------
+MODULE main()
+IVAR 	
+		Varinf_context_history 	: array -3..-1 of integer; -- donot know valid values for now	
+		Energy  : 1..100;
+VAR
+	Varinf_rate 							: {High_Varinf_rate ,Low_Varinf_rate };
+	fft_and_geortzel_frequency 				: {High_Frequency, Low_Frequency};
+	fft_and_geortzel_execution 				: {ON,OFF};
+	gravitational_and_differences_execution : {ON,OFF};
+
+	r_A 			: rule_A(Varinf_context_history,Varinf_rate);
+	r_B 			: rule_B(Energy,fft_and_geortzel_frequency);
+	r_C 			: rule_C(Energy,fft_and_geortzel_execution);
+	r_D 			: rule_D(Energy,gravitational_and_differences_execution);
+DEFINE
+	varianceinf_rate := case	
+						Varinf_rate = High_Varinf_rate 	: 4; --i assume default value is 40
+						TRUE 							: 2;
+						esac;
+
+	
+--****************************************************************************************************
+--LTLSPEC  G((Varinf_context_history[-3] = Varinf_context_history[-2] &   
+--			Varinf_context_history[-2] = Varinf_context_history[-1] ) -> X Varinf_rate = Low_Varinf_rate);
+--LTLSPEC ( (Energy > 40) -> (F gravitational_and_differences_execution = ON));
+LTLSPEC ((Varinf_rate = Low_Varinf_rate) -> ( F Varinf_rate = High_Varinf_rate));
+
+	
+--Figure 6.11: DSL code for the adaptable activity inference.
+------------------------------------------------------------------------------------
+MODULE rule_A(Varinf_context_history,Varinf_rate)
+
+ASSIGN
+	next(Varinf_rate) := case	
+						Varinf_context_history[-3] = Varinf_context_history[-2] &  
+						Varinf_context_history[-2] = Varinf_context_history[-1] : Low_Varinf_rate;
+						TRUE 													: High_Varinf_rate; -- i donot see this assignment explicitily in the code
+						esac;
+------------------------------------------------------------------------------------
+MODULE rule_B(Energy,fft_and_geortzel_frequency)
+
+ASSIGN
+	next(fft_and_geortzel_frequency) := case	
+										Energy <= 65 & Energy > 40 	: Low_Frequency; -- what will happen above 65%
+										TRUE 						: High_Frequency; -- i donot see this explicitily in the code
+										esac;
+------------------------------------------------------------------------------------
+MODULE rule_C(Energy,fft_and_geortzel_execution)
+
+ASSIGN
+	next(fft_and_geortzel_execution) := case	
+										Energy <= 40 & Energy > 25 	: OFF; -- what will happen above 65%
+										TRUE 						: ON; -- i do not see this explicitily in the code
+										esac;
+------------------------------------------------------------------------------------
+MODULE rule_D(Energy,gravitational_and_differences_execution)
+ASSIGN
+	next(gravitational_and_differences_execution) := case	
+														Energy <= 25 	: OFF; -- what will happen above 65%
+														TRUE 			: gravitational_and_differences_execution; 
+														esac;											
+
+

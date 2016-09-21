@@ -1,0 +1,49 @@
+-------------Figure 6.9: DSL specification code for the scenario C.--------------------------------------------------------------------------------
+MODULE main()
+IVAR Energy : 1..100;
+VAR
+	inference_rate 	: {Default_inference_rate, High_inference_rate, Low_inference_rate};	
+ASSIGN
+    init(inference_rate) := Default_inference_rate;	
+	next(inference_rate) := case 
+								Energy<=40 		: High_inference_rate;							
+								TRUE			: case 
+													Energy <= 70	: Low_inference_rate;
+													TRUE			: inference_rate;    
+													esac;
+								esac;
+DEFINE
+stateInference.rate 	:= case
+							inference_rate = Low_inference_rate   : 3;
+							inference_rate = High_inference_rate  : 5;
+							TRUE								  : 3;  -- i am not sure about this value
+							esac;										-- code says nothing					
+movingInference.rate	:= case
+							inference_rate = Low_inference_rate   	: 3;
+							inference_rate = High_inference_rate  	: 4;
+							TRUE							  		: 3; -- i am not sure about this value
+							esac;										-- code says nothing
+notMovingInference.rate	:= case			
+							inference_rate = Low_inference_rate   	: 3;
+							inference_rate = High_inference_rate	: 4;
+							TRUE						  			: 3; -- i am not sure about this value 
+							esac;										-- code says nothing				
+							
+--************************************PROPERTY ****************************************************************		  
+LTLSPEC G (Energy > 70 -> F (inference_rate = Default_inference_rate));
+
+--************************************PROPERTY 2****************************************************************		  
+--LTLSPEC G(configurations = default_config -> F ((configurations = config_1)| 
+--							(configurations = config_2)|(configurations = config_3)|
+--							(configurations = config_4)|(configurations != config_5))); 
+--************************************PROPERTY 3****************************************************************
+--LTLSPEC G(  ( (Energy<=70 & Energy >40) -> inference_rate = High_inference_rate)  &  
+--			  ( (Energy<= 40 ) -> inference_rate = Low_inference_rate) )  ;						
+--************************************PROPERTY 4****************************************************************
+
+--LTLSPEC 	G (inference_rate = Low_inference_rate -> ((stateInference.rate = 3 ) & 
+--														(movingInference.rate = 3) &
+--														(notMovingInference.rate = 3)));
+
+--LTLSPEC 	G ( Energy <= 40 -> inference_rate = Low_inference_rate ) & 
+--ad--				(Energy <= 70 -> inference_rate = High_inference_rate ) ;  -- system should resort to low inference rate whenever energy is lowered

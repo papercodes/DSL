@@ -1,0 +1,19 @@
+--Santos, A. C., Cardoso, J. M. P., Diniz, P. C., & Ferreira, D. R. (n.d.). Specifying Adaptations      through a DSL with an Application to Mobile Robot Navigation, 219–234.
+Fig. 5. DSL specification for a location context inference process adaptable to sensor availability and device energy.
+MODULE main
+IVAR	
+	gsm_sensor : {avl, n_avl};
+	gps_sensor : {avl, n_avl};
+	wifi_sensor : {avl, n_avl};
+	EnergyLevel : 1..100;
+VAR	
+	sensor : {gsm, gps, wifi, n_avl};
+ASSIGN
+init(sensor) := gps;
+next(sensor) := case	
+					EnergyLevel <50 & gsm_sensor = avl : gsm;
+					gps_sensor = n_avl & wifi_sensor = avl : wifi;
+					wifi_sensor = n_avl & gsm_sensor = avl : gsm;
+					TRUE : 						sensor; 
+esac;
+LTLSPEC  (gsm_sensor = avl -> F sensor = gsm);

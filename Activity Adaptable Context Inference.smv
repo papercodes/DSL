@@ -1,0 +1,32 @@
+--Santos, A. C., Cardoso, J. M. P., Diniz, P. C., & Ferreira, D. R. (n.d.). Specifying Adaptations      
+--through a DSL with an Application to Mobile Robot Navigation, 219–234.
+--Fig. 3. DSL code for adaptable user activity context inference.
+
+MODULE main
+IVAR
+	EnergyLevel : {Low,High};
+	CPULoad : {Low,High};
+	elapsed_time : integer;
+	
+VAR
+	fftNrSamples : {2048,512};
+	run_period : 2..6;
+ASSIGN	
+	init(fftNrSamples) := 2048 ; init(run_period) := 5 ;
+next(fftNrSamples) := case
+						EnergyLevel = Low | CPULoad = High : 512;
+						TRUE : fftNrSamples;
+						esac;
+next(run_period) := case
+						elapsed_time > run_period : 2;
+						TRUE : run_period;	
+						esac;
+--whenever energy level is high and cpu load is low 
+						
+LTLSPEC G ( (EnergyLevel = High & CPULoad = Low) 	-> fftNrSamples = 2048);
+LTLSPEC G ( (elapsed_time <= run_period) 			-> run_period >2) ;
+
+
+	
+	
+	

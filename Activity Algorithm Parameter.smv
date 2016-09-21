@@ -1,0 +1,67 @@
+--Figure 6.7: DSL specification code for the reconfiguration of algorithm parameters.
+--****************************************************************************************************				
+MODULE main()
+IVAR
+	dead_line :  real;  -- to  check cpu load
+VAR
+	configurations 	: {default_config, config_1, config_2, config_3, config_4, config_5};	
+ASSIGN	
+	init(configurations) := default_config;
+	next(configurations) := case
+								dead_line > 1.75  : config_1;
+								dead_line > 1.50  : config_2;
+								dead_line > 1.25  : config_3;
+								dead_line > 0.75  : config_4;
+								dead_line <= 0.75 : config_5;
+								TRUE 			  : configurations;
+							esac;
+DEFINE
+	windowSize := case                  -- PARAMETERS ARE SET ACCORIDING TO FIGURE 6.7
+						configurations = config_1 	: 512;
+						configurations = config_2 	: 256;
+						configurations = config_3 	: 128;
+						configurations = config_4 	: 64;
+						configurations = config_5 	: 32;
+						TRUE						: 512;
+						esac;
+						
+	windowOverlap := case  				-- PARAMETERS ARE SET ACCORIDING TO FIGURE 6.7
+						configurations = config_1 	: 64;
+						configurations = config_2 	: 64;
+						configurations = config_3 	: 64;
+						configurations = config_4 	: 16;
+						configurations = config_5 	: 16;
+						TRUE						: 64;
+						esac;
+	nrFreqs := case 					-- PARAMETERS ARE SET ACCORIDING TO FIGURE 6.7
+						configurations = config_1 	: 5;
+						configurations = config_2 	: 5;
+						configurations = config_3 	: 5;
+						configurations = config_4 	: 5;
+						configurations = config_5 	: 5;
+						TRUE						: 5;
+						esac;
+	k := case 							-- PARAMETERS ARE SET ACCORIDING TO FIGURE 6.7
+						configurations = config_1 	: 3;
+						configurations = config_2 	: 3;
+						configurations = config_3 	: 3;
+						configurations = config_4 	: 3;
+						configurations = config_5 	: 1;
+						TRUE						: 3;
+						esac;
+--**********************************PROPERTY 1******************************************************************
+LTLSPEC 
+		G( 	(configurations = default_config -> (windowSize = 512 & windowOverlap = 64 & nrFreqs = 5 & k = 3)) &
+			(configurations = config_1 		 -> (windowSize = 512 & windowOverlap = 64 & nrFreqs = 5 & k = 3)) &
+			(configurations = config_2       -> (windowSize = 256 & windowOverlap = 64 & nrFreqs = 5 & k = 3)) &
+			(configurations = config_3       -> (windowSize = 128 & windowOverlap = 64 & nrFreqs = 5 & k = 3)) &
+			(configurations = config_4 		 -> (windowSize = 64 & windowOverlap  = 16 & nrFreqs = 5 & k = 3)) &
+			(configurations = config_5 		 -> (windowSize = 32 & windowOverlap  = 16 & nrFreqs = 5 & k = 1)) ) 	;
+--************************************PROPERTY 2****************************************************************
+LTLSPEC 	
+	G X( (configurations = default_config ) |
+		( (  (dead_line) >  1.75 							  ->   (X configurations = config_1)) & 
+		( ( (dead_line)  >  1.5   & (dead_line) <=  1.75)     ->   (X configurations = config_2)) &
+		( ( (dead_line)  >  1.25  & (dead_line) <=  1.5 )     ->   (X configurations = config_3)) &
+		( ( (dead_line)  >  0.75  & (dead_line) <=  1.25)     ->   (X configurations = config_4)) &
+		  ( (dead_line)  <= 0.75 							  ->   (X configurations = config_5)) ) );
